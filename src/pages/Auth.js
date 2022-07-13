@@ -1,77 +1,37 @@
-import React, { useState } from "react";
+import React from "react";
 import {
-  getAuth,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
+  GoogleAuthProvider,
+  GithubAuthProvider,
+  signInWithPopup,
 } from "firebase/auth";
+import AuthForm from "components/AuthForm";
+import { authService } from "fbase";
 
-const Auth = (props) => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [newAccount, setNewAccount] = useState(true);
-  const [error, setError] = useState(false);
-
-  const toggleAccount = () => setNewAccount((prev) => !prev);
-
-  const changeHandler = (event) => {
+const Auth = () => {
+  const onSocialClick = async (event) => {
     const {
-      target: { name, value },
+      target: { name },
     } = event;
 
-    if (name === "email") {
-      setEmail(value);
-    } else if (name === "password") {
-      setPassword(value);
+    let provider;
+    if (name === "google") {
+      provider = new GoogleAuthProvider();
+    } else if (name === "github") {
+      provider = new GithubAuthProvider();
     }
-  };
-
-  const submitHandler = async (event) => {
-    event.preventDefault();
-    try {
-      const auth = getAuth();
-      let data;
-      if (newAccount) {
-        data = await createUserWithEmailAndPassword(auth, email, password);
-      } else {
-        data = await signInWithEmailAndPassword(auth, email, password);
-      }
-      console.log(data);
-    } catch (error) {
-      setError(error.massage);
-    }
+    await signInWithPopup(authService, provider);
   };
 
   return (
     <div>
-      <form onSubmit={submitHandler}>
-        <input
-          name="email"
-          type="email"
-          value={email}
-          placeholder="Email"
-          onChange={changeHandler}
-          required
-        />
-        <input
-          name="password"
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={changeHandler}
-          required
-        />
-        <input
-          type="submit"
-          value={newAccount ? "Create Account" : "Sign In"}
-        />
-        {error}
-      </form>
-      <span onClick={toggleAccount}>
-        {newAccount ? "Sign In" : "Create Account"}
-      </span>
+      <AuthForm />
       <div>
-        <button>Continue with Google</button>
-        <button>Continue with Github</button>
+        <button onClick={onSocialClick} name="google">
+          Continue with Google
+        </button>
+        <button onClick={onSocialClick} name="github">
+          Continue with Github
+        </button>
       </div>
     </div>
   );
