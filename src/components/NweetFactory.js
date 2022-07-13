@@ -4,8 +4,10 @@ import { ref, uploadString, getDownloadURL } from "firebase/storage";
 
 import { dbService, storageService } from "fbase";
 import { v4 as uuidv4 } from "uuid";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPlus, faTimes } from "@fortawesome/free-solid-svg-icons";
 
-const NweetFactory = ({userObj}) => {
+const NweetFactory = ({ userObj }) => {
   const [nweet, setNweet] = useState("");
   const [attachment, setAttachment] = useState("");
 
@@ -18,8 +20,13 @@ const NweetFactory = ({userObj}) => {
 
   const onSubmitHandler = async (event) => {
     event.preventDefault();
+
+    if (nweet === "") {
+      return;
+    }
+
     let attachmentURL = "";
-    
+
     if (attachment !== "") {
       const attachmentRef = ref(storageService, `${userObj.uid}/${uuidv4()}`);
       const response = await uploadString(
@@ -27,10 +34,10 @@ const NweetFactory = ({userObj}) => {
         attachment,
         "data_url"
       );
-      
+
       attachmentURL = await getDownloadURL(response.ref);
     }
-    
+
     const nweetObj = {
       text: nweet,
       createdAt: Date.now(),
@@ -46,7 +53,7 @@ const NweetFactory = ({userObj}) => {
 
   const fileInput = useRef();
   const onClearAttachment = () => {
-    setAttachment(null); // 이미지 프리뷰 없애기
+    setAttachment(""); // 이미지 프리뷰 없애기
     fileInput.current.value = null; // 첨부 파일명 없애기
   };
 
@@ -71,29 +78,45 @@ const NweetFactory = ({userObj}) => {
   };
 
   return (
-    <form onSubmit={onSubmitHandler}>
+    <form onSubmit={onSubmitHandler} className="factoryForm">
+      <div className="factoryInput__container">
+        <input
+          className="factoryInput__input"
+          value={nweet}
+          onChange={onChangeHandler}
+          type="text"
+          placeholder="What's on your mind?"
+          maxLength={120}
+        />
+        <input type="submit" value="&rarr;" className="factoryInput__arrow" />
+      </div>
+      <label htmlFor="attach-file" className="factoryInput__label">
+        <span>Add photos</span>
+        <FontAwesomeIcon icon={faPlus} />
+      </label>
       <input
-        value={nweet}
-        type="text"
-        placeholder="What's on your mind?"
-        maxLength="120"
-        onChange={onChangeHandler}
-      />
-      <input
+        id="attach-file"
         type="file"
         accept="image/*"
         onChange={onFileChangeHandler}
-        ref={fileInput}
+        style={{
+          opacity: 0,
+        }}
       />
-      <input type="submit" value="Nweet" />
-      {attachment && (
-        <div>
-          <img src={attachment} width="50px" height="50px" alt="preview" />
-          <button onClick={onClearAttachment}>Clear</button>
+      <div className="factoryForm__attachment">
+        <img
+          src={attachment}
+          style={{
+            backgroundImage: attachment,
+          }}
+        />
+        <div className="factoryForm__clear" onClick={onClearAttachment}>
+          <span>Remove</span>
+          <FontAwesomeIcon icon={faTimes} />
         </div>
-      )}
+      </div>
     </form>
   );
 };
 
-export default NweetFactory
+export default NweetFactory;
